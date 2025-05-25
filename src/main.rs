@@ -1,8 +1,10 @@
 // src/main.rs
-use actix_web::HttpServer;
+use std::env;
+use actix_web::{App, HttpServer};
+use actix_web::middleware::Logger;
 use env_logger::Env;
 use log::info;
-use hello_api::create_app;
+use hello_api::routes;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -15,10 +17,9 @@ async fn main() -> std::io::Result<()> {
 
     info!("Starting server at http://{}:{}", host, port);
 
-    HttpServer::new(|| create_app()
-        // Enable request logging middleware
-        .wrap(actix_web::middleware::Logger::default())
-    )
+    HttpServer::new(|| App::new()
+                        .wrap(Logger::default())
+                        .configure(routes::init_routes))
         .bind((host, port))?
         .run()
         .await
