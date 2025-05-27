@@ -1,5 +1,5 @@
 // src/handlers/hello.rs
-use actix_web::{HttpResponse, Responder, web};
+use actix_web::{HttpResponse, Responder};
 
 /// Handler for the root endpoint: returns "Hello, world!"
 // #[actix_web::get("/")]

@@ -10,3 +10,17 @@ actix-web = "4"
 serde = { version = "1", features = ["derive"] }
 env_logger = "0.10"
 log = "0.4"
+
+# Binary profile
+[profile.release]
+opt-level = 3
+lto = true
+debug = false
+
+[profile.dev]
+opt-level = 0
+
+# Binaries
+[[bin]]
+name = "hello-api"
+path = "src/main.rs"

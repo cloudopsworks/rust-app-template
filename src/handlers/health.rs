@@ -1,5 +1,5 @@
 // src/handlers/health.rs
-use actix_web::{HttpResponse, Responder, web};
+use actix_web::{HttpResponse, Responder};
 use serde::Serialize;
 
 /// JSON response for health endpoint
