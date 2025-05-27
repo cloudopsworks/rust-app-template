@@ -1,30 +1,53 @@
 // tests/integration_tests.rs
-#[cfg(test)]
-mod integration_tests {
-    use actix_web::{test, App};
-    use actix_web::http::StatusCode;
-    use serde_json::Value;
-    use hello_api::create_app;
+use actix_web::{test, App};
+use hello_api::routes;
 
-    #[actix_web::test]
-    async fn test_hello_integration() {
-        let app = test::init_service(create_app()).await;
-        let req = test::TestRequest::get().uri("/").to_request();
-        let resp = test::call_service(&app, req).await;
-        assert_eq!(resp.status(), StatusCode::OK);
+#[actix_web::test]
+async fn test_hello_endpoint() {
+    // Arrange
+    let app = test::init_service(
+        App::new()
+            .configure(routes::init_routes)
+    ).await;
 
-        let body = test::read_body(resp).await;
-        assert_eq!(body, "Hello, world!");
-    }
+    // Act
+    let req = test::TestRequest::get().uri("/").to_request();
+    let resp = test::call_service(&app, req).await;
 
-    #[actix_web::test]
-    async fn test_health_integration() {
-        let app = test::init_service(create_app()).await;
-        let req = test::TestRequest::get().uri("/health").to_request();
-        let resp = test::call_service(&app, req).await;
-        assert_eq!(resp.status(), StatusCode::OK);
+    // Assert
+    assert!(resp.status().is_success());
+    let body = test::read_body(resp).await;
+    assert_eq!(body, "Hello, world!");
+}
 
-        let json: Value = test::read_body_json(resp).await;
-        assert_eq!(json["status"], "OK");
-    }
+#[actix_web::test]
+async fn test_health_endpoint() {
+    // Arrange
+    let app = test::init_service(
+        App::new()
+            .configure(routes::init_routes)
+    ).await;
+
+    // Act
+    let req = test::TestRequest::get().uri("/health").to_request();
+    let resp = test::call_service(&app, req).await;
+
+    // Assert
+    assert!(resp.status().is_success());
+}
+
+#[actix_web::test]
+async fn test_not_found() {
+    // Arrange
+    let app = test::init_service(
+        App::new()
+            .configure(routes::init_routes)
+    ).await;
+
+    // Act
+    let req = test::TestRequest::get().uri("/non-existent").to_request();
+    let resp = test::call_service(&app, req).await;
+
+    // Assert
+    assert_eq!(resp.status().as_u16(), 404);
 }

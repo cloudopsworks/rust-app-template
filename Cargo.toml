@@ -7,7 +7,20 @@ description = "A simple HTTP API service with hello world and health endpoints"
 
 [dependencies]
 actix-web = "4"
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
 env_logger = "0.10"
 log = "0.4"
-serde_json = "1.0.140"
+
+# Binary profile
+[profile.release]
+opt-level = 3
+lto = true
+debug = false
+
+[profile.dev]
+opt-level = 0
+
+# Binaries
+[[bin]]
+name = "hello-api"
+path = "src/main.rs"

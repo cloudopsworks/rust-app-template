@@ -3,16 +3,14 @@ organization_unit: "ORG_UNIT"
 environment_name: "ENV_NAME"
 repository_owner: "REPO_OWNER" # Required
 #
-## Default Go version is 1.23, uncomment to build with different version,
-## Dist is the OS distribution, arch is the architecture
-## Image variant should be used for the specific version of OS image to run
-golang:
-  main_file: .
-#  version: 1.23
-#  dist: linux
-#  arch: amd64
+## Default Go version is latest "stable", uncomment to build with different version,
+## Dist & Arch are for cross-compilation, if not specified will use the default for the OS image
+## Image variant should be used for the specific version of OS image to run (container)
+#rust:
+#  version: stable | 1.70 | 1.87.0
+#  dist: unknown-linux-gnu
+#  arch: x86_64
 #  image_variant: alpine:3.21
-#  disable_cgo: true # uncomment to disable CGO (pure golang build), useful on some cases
 #
 # Set Snyk processing to true if want to enable, the tool is disabled by default
 #snyk:
