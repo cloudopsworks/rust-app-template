@@ -1,4 +1,4 @@
-export PROJECT ?= $(shell basename $(shell pwd))
+export PROJECT ?= $(shell basename $(shell pwd) | tr '-' '_')
 TRONADOR_AUTO_INIT := true
 
 GITVERSION ?= $(INSTALL_PATH)/gitversion
