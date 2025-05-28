@@ -29,6 +29,8 @@ code/init: packages/install/gitversion packages/install/gh packages/install/yq
 	@cargo install toml-cli2 --force
 	@~/.cargo/bin/toml set Cargo.toml package.name $(PROJECT) > Cargo.toml.tmp
 	@mv Cargo.toml.tmp Cargo.toml
+	@~/.cargo/bin/toml set Cargo.toml 'bin[0].name' $(PROJECT) > Cargo.toml.tmp
+	@mv Cargo.toml.tmp Cargo.toml
 ifeq ($(OS),darwin)
 	@find . -name "*.rs" -exec sed -E -i '' "s|hello_api::|${PROJECT}::|g" {} \;
 else
