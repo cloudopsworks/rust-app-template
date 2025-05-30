@@ -1,4 +1,4 @@
-export PROJECT ?= $(shell basename $(shell pwd))
+export PROJECT ?= $(shell basename $(shell pwd) | tr '-' '_')
 TRONADOR_AUTO_INIT := true
 
 GITVERSION ?= $(INSTALL_PATH)/gitversion
@@ -16,6 +16,8 @@ else
 	# Translates + in version to - for helm/docker compatibility
 	@echo "$(shell $(GITVERSION) -output json -showvariable FullSemVer | tr '+' '-')" > VERSION
 endif
+	@cargo install cargo-edit --force
+	@cargo set-version "$$(cat VERSION)"
 
 # Modify pom.xml to change the project name with the $(PROJECT) variable
 ## Code Initialization for GoLang Project
@@ -24,11 +26,13 @@ code/init: packages/install/gitversion packages/install/gh packages/install/yq
 	$(call assert-set,GH)
 	$(call assert-set,YQ)
 	$(eval $@_OWNER := $(shell $(GH) repo view --json 'name,owner' -q '.owner.login'))
-	rm go.mod
-	@go mod init $(PROJECT)
-	@go mod tidy
+	@cargo install toml-cli2 --force
+	@~/.cargo/bin/toml set Cargo.toml package.name $(PROJECT) > Cargo.toml.tmp
+	@mv Cargo.toml.tmp Cargo.toml
+	@~/.cargo/bin/toml set Cargo.toml 'bin[0].name' $(PROJECT) > Cargo.toml.tmp
+	@mv Cargo.toml.tmp Cargo.toml
 ifeq ($(OS),darwin)
-	@find . -name "*.go" -exec sed -E -i '' "s/hello-service/${PROJECT}/g" {} \;
+	@find . -name "*.rs" -exec sed -E -i '' "s|hello_api::|${PROJECT}::|g" {} \;
 else
-	@find . -name "*.go" -exec sed -E -i '' "s/hello-service/${PROJECT}/g" {} \;
+	@find . -name "*.rs" -exec sed -E -i '' "s|hello_api::|${PROJECT}::|g" {} \;
 endif

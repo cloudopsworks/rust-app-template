@@ -71,8 +71,11 @@ repository_owner: "REPO_OWNER" # Required
 # Path where the API definitions are stored if different of default ./apifiles
 #api_files_dir: "relative-path-to-apidefs"
 #
-# Optional Additional ENV variables
+# Optional Additional ENV variables for build
 #build_options: ""
+#
+# Optional Additional ENV variables for tests
+#test_options: ""
 #
 # Preview configuration, if enabled will create a preview environment for each PR
 #preview:
