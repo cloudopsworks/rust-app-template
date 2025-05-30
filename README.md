@@ -68,4 +68,3 @@ The implementation includes several production-ready features:
 - Type-safe responses
 - Documentation
 
-Would you like me to explain any specific part in more detail or make any modifications to the code?
