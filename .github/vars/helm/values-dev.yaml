@@ -26,4 +26,4 @@ ingress:
 
 # Uncomment to enable opentelemetry instrumentation
 #podAnnotations:
-#  instrumentation.opentelemetry.io/inject-go: "true"
+#  instrumentation.opentelemetry.io/inject-rust: "true" #NOT-AVAILABLE YET
