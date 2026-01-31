@@ -26,7 +26,6 @@ code/init: packages/install/gitversion packages/install/gh packages/install/yq
 	$(call assert-set,GH)
 	$(call assert-set,YQ)
 	$(eval $@_OWNER := $(shell $(GH) repo view --json 'name,owner' -q '.owner.login'))
-	@cargo install toml-cli2 --force
 	@~/.cargo/bin/toml set Cargo.toml package.name $(PROJECT) > Cargo.toml.tmp
 	@mv Cargo.toml.tmp Cargo.toml
 	@~/.cargo/bin/toml set Cargo.toml 'bin[0].name' $(PROJECT) > Cargo.toml.tmp
