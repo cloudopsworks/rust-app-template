@@ -7,8 +7,12 @@
 #     Distributed Under Apache v2.0 License
 #
 zipGlobs:
-  - conf/**
+  - target/release/*
 excludeGlobs:
+  - target/release/build/*
+  - target/release/deps/*
+  - target/release/*.rlib
+  - target/release/*.d
   - Dockerfile
   - .helmignore
   - .dockerignore
