@@ -20,6 +20,10 @@ debug = false
 [profile.dev]
 opt-level = 0
 
+[profile.test]
+opt-level = 0
+debug = true
+
 # Binaries
 [[bin]]
 name = "hello-api"
