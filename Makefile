@@ -1,4 +1,5 @@
-export PROJECT ?= $(shell basename $(shell pwd) | tr '-' '_')
+export PROJECT ?= $(shell basename $(shell pwd))
+export PROJECT_CODE ?= $(shell basename $(shell pwd) | tr '-' '_')
 TRONADOR_AUTO_INIT := true
 
 GITVERSION ?= $(INSTALL_PATH)/gitversion
@@ -16,7 +17,7 @@ else
 	# Translates + in version to - for helm/docker compatibility
 	@echo "$(shell $(GITVERSION) -output json -showvariable FullSemVer | tr '+' '-')" > VERSION
 endif
-	@cargo install cargo-edit --force
+	@cargo install cargo-edit
 	@cargo set-version "$$(cat VERSION)"
 
 # Modify pom.xml to change the project name with the $(PROJECT) variable
@@ -31,7 +32,7 @@ code/init: packages/install/gitversion packages/install/gh packages/install/yq
 	@~/.cargo/bin/toml set Cargo.toml 'bin[0].name' $(PROJECT) > Cargo.toml.tmp
 	@mv Cargo.toml.tmp Cargo.toml
 ifeq ($(OS),darwin)
-	@find . -name "*.rs" -exec sed -E -i '' "s|hello_api::|${PROJECT}::|g" {} \;
+	@find . -name "*.rs" -exec sed -E -i '' "s|hello_api::|${PROJECT_CODE}::|g" {} \;
 else
-	@find . -name "*.rs" -exec sed -E -i '' "s|hello_api::|${PROJECT}::|g" {} \;
+	@find . -name "*.rs" -exec sed -E -i '' "s|hello_api::|${PROJECT_CODE}::|g" {} \;
 endif
