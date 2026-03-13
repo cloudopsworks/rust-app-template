@@ -71,6 +71,7 @@ permissions:
   pull-requests: write
   issues: write
   checks: write
+  security-events: write
 
 jobs:
   preload:
@@ -207,6 +208,17 @@ jobs:
           dtrack_project_key: ${{ needs.preload.outputs.project_key }}
           project_type: ${{ needs.preload.outputs.dtrack_project_type }}
           semver: ${{ inputs.semver }}
+
+      - name: Trivy Scan
+        if: | 
+          (needs.preload.outputs.trivy_enabled == 'true') &&
+          (needs.preload.outputs.container_enabled == 'true')
+        uses: ./bp/ci/docker/scan/trivy
+        continue-on-error: true
+        with:
+          source_path: ${{ steps.co.outputs.source_path }}
+          bot_user: ${{ inputs.bot_user }}
+          token: ${{ secrets.token }}
 
       - name: Upload Artifacts
         uses: ./bp/ci/rust/test/artifacts
