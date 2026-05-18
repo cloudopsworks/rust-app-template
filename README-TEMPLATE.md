@@ -127,7 +127,7 @@ Set these values before your first pipeline run:
 Use `cloud: none` and `cloud_type: none` only for repositories that should build and scan without deployment.
 
 Common optional sections:
-- `rust` — Rust toolchain version, optional components, target dist/arch, and build image variant
+- `rust` — Rust toolchain version, optional components, target dist/arch, build image variant, and optional `goreleaser: true` flag to activate GoReleaser releases (requires `GPG_PRIVATE_KEY` and `GPG_PASSPHRASE` secrets — see **GoReleaser secrets** below)
 - `preview` — PR preview environment behavior
 - `apis` — API Gateway publishing
 - `observability` — tracing and monitoring agent configuration
@@ -248,6 +248,17 @@ Typical examples:
 
 Review the `with:` and `secrets:` blocks in the workflow files and align your repository settings before enabling deployments.
 
+### GoReleaser secrets (required when goreleaser is enabled)
+
+When you set `goreleaser: true` under the `rust:` section of `.cloudopsworks/vars/inputs-global.yaml`, the `main-build.yml` pipeline activates a GoReleaser release step. This step signs artifacts using GPG and requires two additional secrets to be present at the **repository or organization level** before the first pipeline run:
+
+| Secret | Description |
+|--------|-------------|
+| `GPG_PRIVATE_KEY` | ASCII-armored GPG private key used to sign release artifacts. Export with `gpg --armor --export-secret-keys <KEY_ID>`. |
+| `GPG_PASSPHRASE` | Passphrase that unlocks the private key above. |
+
+> **Note:** When goreleaser is active, standard cloud deployment jobs (`deploy.yml` and `deploy-blue-green.yml`) are skipped automatically. Set `cloud_type: none` in `inputs-global.yaml` to make this intent explicit and avoid configuration drift.
+
 ---
 
 ## Release and versioning expectations
@@ -280,7 +291,7 @@ If you use the CloudOps Works release workflow, keep changes grouped by release 
 - [ ] Update `.cloudopsworks/vars/inputs-global.yaml`
 - [ ] Configure exactly one target file per active environment
 - [ ] Configure preview settings if needed
-- [ ] Add required GitHub secrets and variables
+- [ ] Add required GitHub secrets and variables (include `GPG_PRIVATE_KEY` and `GPG_PASSPHRASE` if goreleaser is enabled)
 - [ ] Run `cargo test`
 - [ ] Open a PR and verify `pr-build.yml`
 - [ ] Merge and verify the first environment deployment
