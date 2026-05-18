@@ -75,7 +75,6 @@ branches:
     track-merge-target: false
     regex: "^releases?[\\/-](?<BranchName>.+)"
     source-branches:
-      - develop
       - main
       - support
     is-source-branch-for: []

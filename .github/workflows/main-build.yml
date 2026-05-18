@@ -67,6 +67,7 @@ jobs:
       has_qualifier: ${{ steps.config.outputs.has_qualifier }}
       observability_enabled: ${{ steps.config.outputs.observability_enabled }}
       observability_agent: ${{ steps.config.outputs.observability_agent }}
+      rust_goreleaser: ${{ steps.build.outputs.rust_goreleaser }}
     steps:
       - name: Checkout w/Blueprint
         uses: cloudopsworks/blueprints/cd/checkout@v5.10
@@ -177,6 +178,16 @@ jobs:
             *.zip
           token: ${{ secrets.BOT_TOKEN }}
 
+      - name: GoReleaser Pipeline
+        uses: ./bp/cd/rust/release
+        if: needs.code-build.outputs.golang_goreleaser == 'true'
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg_passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          semver: ${{ needs.code-build.outputs.semver }}
+          golang_version: ${{ needs.code-build.outputs.golang_version }}
+
   scan:
     name: 'Code Scan SAST/SCA/DAST'
     needs:
@@ -210,7 +221,8 @@ jobs:
       (needs.code-build.result == 'success') &&
       (needs.code-build.outputs.blue_green_enabled != 'true') && 
       (needs.code-build.outputs.deployment_enabled == 'true') && 
-      (needs.code-build.outputs.is_library != 'true')
+      (needs.code-build.outputs.is_library != 'true') && 
+      (needs.code-build.outputs.golang_goreleaser != 'true')
     uses: ./.github/workflows/deploy.yml
     with:
       deployment_name: ${{ needs.code-build.outputs.deployment_name }}
@@ -245,7 +257,8 @@ jobs:
       (needs.code-build.result == 'success') &&
       (needs.code-build.outputs.blue_green_enabled == 'true')  && 
       (needs.code-build.outputs.deployment_enabled == 'true') && 
-      (needs.code-build.outputs.is_library != 'true')
+      (needs.code-build.outputs.is_library != 'true') && 
+      (needs.code-build.outputs.golang_goreleaser != 'true')
     uses: ./.github/workflows/deploy-blue-green.yml
     with:
       deployment_name: ${{ needs.code-build.outputs.deployment_name }}
