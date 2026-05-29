@@ -127,7 +127,7 @@ Set these values before your first pipeline run:
 Use `cloud: none` and `cloud_type: none` only for repositories that should build and scan without deployment.
 
 Common optional sections:
-- `rust` — Rust toolchain version, optional components, target dist/arch, build image variant, and optional `goreleaser: true` flag to activate GoReleaser releases (requires `GPG_PRIVATE_KEY` and `GPG_PASSPHRASE` secrets — see **GoReleaser secrets** below)
+- `rust` — Rust toolchain version, optional components, target dist/arch, build image variant, and optional `goreleaser: true` flag to activate GoReleaser releases (requires `GPG_PRIVATE_KEY` and `GPG_PASSPHRASE` secrets; optional secrets enable Homebrew, Chocolatey, and Apple signing — see **GoReleaser secrets** below)
 - `preview` — PR preview environment behavior
 - `apis` — API Gateway publishing
 - `observability` — tracing and monitoring agent configuration
@@ -250,12 +250,26 @@ Review the `with:` and `secrets:` blocks in the workflow files and align your re
 
 ### GoReleaser secrets (required when goreleaser is enabled)
 
-When you set `goreleaser: true` under the `rust:` section of `.cloudopsworks/vars/inputs-global.yaml`, the `main-build.yml` pipeline activates a GoReleaser release step. This step signs artifacts using GPG and requires two additional secrets to be present at the **repository or organization level** before the first pipeline run:
+When you set `goreleaser: true` under the `rust:` section of `.cloudopsworks/vars/inputs-global.yaml`, the `main-build.yml` pipeline activates a GoReleaser release step. This step signs artifacts using GPG and requires the following secrets to be present at the **repository or organization level** before the first pipeline run:
+
+**Required secrets:**
 
 | Secret | Description |
 |--------|-------------|
 | `GPG_PRIVATE_KEY` | ASCII-armored GPG private key used to sign release artifacts. Export with `gpg --armor --export-secret-keys <KEY_ID>`. |
 | `GPG_PASSPHRASE` | Passphrase that unlocks the private key above. |
+
+**Optional secrets (enable additional distribution channels):**
+
+| Secret | Exposed as | Description |
+|--------|------------|-------------|
+| `HOMEBREW_TAP_TOKEN` | `HOMEBREW_TAP_TOKEN` | GitHub token with write access to the Homebrew tap repository. Falls back to `BOT_TOKEN` when not set. |
+| `CHOCOLATEY_API_KEY` | `CHOCOLATEY_API_KEY` | API key for publishing packages to the Chocolatey community repository. |
+| `XCODE_BUILD_CERTIFICATE_BASE64` | `MACOS_SIGN_P12` | Base64-encoded P12 certificate used to sign macOS binaries. |
+| `XCODE_BUILD_CERTIFICATE_PASS` | `MACOS_SIGN_PASSWORD` | Passphrase that unlocks the P12 certificate above. |
+| `APPLE_STORE_CONNECT_KEY_BASE64` | `MACOS_NOTARY_KEY` | Base64-encoded App Store Connect API private key used for macOS notarization. |
+| `APPLE_STORE_CONNECT_KEY_ID` | `MACOS_NOTARY_KEY_ID` | Key ID corresponding to the App Store Connect API key. |
+| `APPLE_STORE_CONNECT_ISSUER_ID` | `MACOS_NOTARY_ISSUER_ID` | Issuer ID for the App Store Connect API key. |
 
 > **Note:** When goreleaser is active, standard cloud deployment jobs (`deploy.yml` and `deploy-blue-green.yml`) are skipped automatically. Set `cloud_type: none` in `inputs-global.yaml` to make this intent explicit and avoid configuration drift.
 
@@ -291,7 +305,7 @@ If you use the CloudOps Works release workflow, keep changes grouped by release 
 - [ ] Update `.cloudopsworks/vars/inputs-global.yaml`
 - [ ] Configure exactly one target file per active environment
 - [ ] Configure preview settings if needed
-- [ ] Add required GitHub secrets and variables (include `GPG_PRIVATE_KEY` and `GPG_PASSPHRASE` if goreleaser is enabled)
+- [ ] Add required GitHub secrets and variables (include `GPG_PRIVATE_KEY` and `GPG_PASSPHRASE` if goreleaser is enabled; add optional Homebrew, Chocolatey, or Apple signing secrets as needed)
 - [ ] Run `cargo test`
 - [ ] Open a PR and verify `pr-build.yml`
 - [ ] Merge and verify the first environment deployment
