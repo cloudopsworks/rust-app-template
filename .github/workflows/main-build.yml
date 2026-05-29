@@ -179,7 +179,7 @@ jobs:
           token: ${{ secrets.BOT_TOKEN }}
 
       ##
-      # GoReleaser pipeline, this pipeline will be triggered only if the code-build job has golang_goreleaser output set to true, this is an opt-in output that can be set in the .cloudopsworks/vars/inputs-global.yaml file or in the project specific vars file, example .cloudopsworks/vars/inputs-myproject.yaml
+      # GoReleaser pipeline, this pipeline will be triggered only if the code-build job has rust_goreleaser output set to true, this is an opt-in output that can be set in the .cloudopsworks/vars/inputs-global.yaml file or in the project specific vars file, example .cloudopsworks/vars/inputs-myproject.yaml
       #  gpg_private_key: will be used to compute GPG_FINGERPRINT for goreleaser
       #  gpg_passphrase: exposed as PASSPHRASE to goreleaser for GPG signing
       #  homebrew_tap_token: exposed as HOMEBREW_TAP_TOKEN to goreleaser, if HOMEBREW_TAP_TOKEN is not set it will fallback to BOT_TOKEN
@@ -191,7 +191,7 @@ jobs:
       #  apple_store_connect_issuer_id: exposed as MACOS_NOTARY_ISSUER_ID to goreleaser
       - name: GoReleaser Pipeline
         uses: ./bp/cd/rust/release
-        if: needs.code-build.outputs.golang_goreleaser == 'true'
+        if: needs.code-build.outputs.rust_goreleaser == 'true'
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -240,7 +240,7 @@ jobs:
       (needs.code-build.outputs.blue_green_enabled != 'true') && 
       (needs.code-build.outputs.deployment_enabled == 'true') && 
       (needs.code-build.outputs.is_library != 'true') && 
-      (needs.code-build.outputs.golang_goreleaser != 'true')
+      (needs.code-build.outputs.rust_goreleaser != 'true')
     uses: ./.github/workflows/deploy.yml
     with:
       deployment_name: ${{ needs.code-build.outputs.deployment_name }}
@@ -276,7 +276,7 @@ jobs:
       (needs.code-build.outputs.blue_green_enabled == 'true')  && 
       (needs.code-build.outputs.deployment_enabled == 'true') && 
       (needs.code-build.outputs.is_library != 'true') && 
-      (needs.code-build.outputs.golang_goreleaser != 'true')
+      (needs.code-build.outputs.rust_goreleaser != 'true')
     uses: ./.github/workflows/deploy-blue-green.yml
     with:
       deployment_name: ${{ needs.code-build.outputs.deployment_name }}
