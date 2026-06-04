@@ -265,8 +265,9 @@ When you set `goreleaser: true` under the `rust:` section of `.cloudopsworks/var
 |--------|------------|-------------|
 | `HOMEBREW_TAP_TOKEN` | `HOMEBREW_TAP_TOKEN` | GitHub token with write access to the Homebrew tap repository. Falls back to `BOT_TOKEN` when not set. |
 | `CHOCOLATEY_API_KEY` | `CHOCOLATEY_API_KEY` | API key for publishing packages to the Chocolatey community repository. |
-| `XCODE_BUILD_CERTIFICATE_BASE64` | `MACOS_SIGN_P12` | Base64-encoded P12 certificate used to sign macOS binaries. |
-| `XCODE_BUILD_CERTIFICATE_PASS` | `MACOS_SIGN_PASSWORD` | Passphrase that unlocks the P12 certificate above. |
+| `APPLE_SIGN_CERTIFICATE_BASE64` (or `XCODE_BUILD_CERTIFICATE_BASE64`) | `MACOS_SIGN_P12` | Base64-encoded P12 certificate used to sign macOS binaries. Preferred name is `APPLE_SIGN_CERTIFICATE_BASE64`; the legacy `XCODE_BUILD_CERTIFICATE_BASE64` is accepted as a fallback. |
+| `APPLE_SIGN_CERTIFICATE_PASS` (or `XCODE_BUILD_CERTIFICATE_PASS`) | `MACOS_SIGN_PASSWORD` | Passphrase that unlocks the P12 certificate above. Preferred name is `APPLE_SIGN_CERTIFICATE_PASS`; the legacy `XCODE_BUILD_CERTIFICATE_PASS` is accepted as a fallback. |
+| `APPLE_KEYCHAIN_PASSWORD` (or `XCODE_KEYCHAIN_PASSWORD`) | `MACOS_KEYCHAIN_PASSWORD` | Password used to create the temporary macOS keychain that holds the signing certificate. Preferred name is `APPLE_KEYCHAIN_PASSWORD`; the legacy `XCODE_KEYCHAIN_PASSWORD` is accepted as a fallback. |
 | `APPLE_STORE_CONNECT_KEY_BASE64` | `MACOS_NOTARY_KEY` | Base64-encoded App Store Connect API private key used for macOS notarization. |
 | `APPLE_STORE_CONNECT_KEY_ID` | `MACOS_NOTARY_KEY_ID` | Key ID corresponding to the App Store Connect API key. |
 | `APPLE_STORE_CONNECT_ISSUER_ID` | `MACOS_NOTARY_ISSUER_ID` | Issuer ID for the App Store Connect API key. |
