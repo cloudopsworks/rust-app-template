@@ -30,6 +30,7 @@ Use this template when you want a new Rust service that already follows the Clou
 - `.cloudopsworks/gitversion_gitflow.yaml` — reference GitVersion config aligned with the template's default GitFlow release model
 - `.cloudopsworks/gitversion_githubflow.yaml` — optional GitVersion reference for teams that explicitly rewire workflows away from GitFlow
 - `.github/workflows/` — reusable CI/CD orchestration
+- `.goreleaser.yml` — GoReleaser configuration for cross-platform binary releases (used when `goreleaser: true` is set in `inputs-global.yaml`)
 - `Makefile` — bootstrap/version targets used by template consumers
 
 ---
@@ -273,6 +274,17 @@ When you set `goreleaser: true` under the `rust:` section of `.cloudopsworks/var
 | `APPLE_STORE_CONNECT_ISSUER_ID` | `MACOS_NOTARY_ISSUER_ID` | Issuer ID for the App Store Connect API key. |
 
 > **Note:** When goreleaser is active, standard cloud deployment jobs (`deploy.yml` and `deploy-blue-green.yml`) are skipped automatically. Set `cloud_type: none` in `inputs-global.yaml` to make this intent explicit and avoid configuration drift.
+
+### GoReleaser configuration requirements
+
+The `.goreleaser.yml` file included in this template is pre-configured for the CloudOps Works release workflow. The most important setting is:
+
+```yaml
+release:
+  use_existing_draft: true
+```
+
+**This setting is required.** The CloudOps Works pipeline pre-creates a draft GitHub Release before invoking GoReleaser. Without `use_existing_draft: true`, GoReleaser will attempt to create a second release for the same tag and fail. Do not remove or set this value to `false`.
 
 ---
 
