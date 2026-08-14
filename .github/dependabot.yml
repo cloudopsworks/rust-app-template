@@ -1,6 +1,6 @@
 version: 2
 updates:
-  - package-ecosystem: "cargo"
+  - package-ecosystem: "rust-toolchain"
     directory: "/"
     schedule:
       interval: "weekly"
@@ -10,3 +10,10 @@ updates:
       prefix: "fix"
       prefix-development: "chore"
       include: "scope"
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
