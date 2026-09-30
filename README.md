@@ -30,7 +30,7 @@ Use this template when you want a new Rust service that already follows the Clou
 - `.cloudopsworks/gitversion_gitflow.yaml` — reference GitVersion config aligned with the template's default GitFlow release model
 - `.cloudopsworks/gitversion_githubflow.yaml` — optional GitVersion reference for teams that explicitly rewire workflows away from GitFlow
 - `.github/workflows/` — reusable CI/CD orchestration
-- `Makefile` — bootstrap/version targets used by template consumers
+- `Makefile` — deprecated compatibility wrappers for bootstrap and version operations
 
 ---
 
@@ -40,18 +40,22 @@ Use this template when you want a new Rust service that already follows the Clou
 Create your new repository from `cloudopsworks/rust-app-template`, then clone it locally.
 
 ### 2. Initialize the crate metadata
-Run the bootstrap target from the root of the new repository:
+Run the bootstrap command from the root of the new repository:
+
+Install Tronador CLI v0.5.0 or newer and GitHub CLI, then authenticate `gh`
+(`gh auth status` must succeed). Project initialization resolves the repository
+owner through GitHub, so network access must be explicit:
 
 ```bash
-make code/init
+tronador project init --allow-network
 ```
 
-This target:
+This command:
 - updates `Cargo.toml` package name to the current directory name
 - updates the first binary name in `Cargo.toml`
 - rewrites Rust crate references from `hello_api::` to your repository name converted to snake case
 
-> Rename the repository directory before running `make code/init` if you want the crate and binary names to match the final service name.
+> Rename the repository directory before running `tronador project init --allow-network` if you want the crate and binary names to match the final service name.
 
 ### 3. Update the sample application
 At minimum, review and update:
@@ -69,10 +73,10 @@ The template starts with two working endpoints so the pipeline has a healthy bas
 ### 4. Verify locally
 ```bash
 cargo test
-make version
+tronador project version
 ```
 
-`make version` writes a `VERSION` file using GitVersion semantics and then synchronizes the crate version in `Cargo.toml` with that computed version.
+`tronador project version` writes a `VERSION` file using GitVersion semantics and then synchronizes the crate version in `Cargo.toml` with that computed version.
 
 ### 5. Run locally
 ```bash
@@ -273,7 +277,7 @@ If you use the CloudOps Works release workflow, keep changes grouped by release 
 ## Recommended first-pass checklist for new repositories
 
 - [ ] Create repo from template
-- [ ] Run `make code/init`
+- [ ] Run `tronador project init --allow-network`
 - [ ] Rename/update the sample Actix handlers and routes
 - [ ] Review crate metadata and dependencies in `Cargo.toml`
 - [ ] Update `.cloudopsworks/cloudopsworks-ci.yaml`
