@@ -72,6 +72,7 @@ jobs:
       rust_goreleaser_macos_config: ${{ steps.build.outputs.rust_goreleaser_macos_config }}
       rust_goreleaser_chocolatey: ${{ steps.build.outputs.rust_goreleaser_chocolatey }}
       rust_goreleaser_chocolatey_config: ${{ steps.build.outputs.rust_goreleaser_chocolatey_config }}
+      rust_version: ${{ steps.build.outputs.rust_version }}
     steps:
       - name: Checkout w/Blueprint
         uses: cloudopsworks/blueprints/cd/checkout@v5.10
@@ -223,7 +224,7 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg_passphrase: ${{ secrets.GPG_PASSPHRASE }}
           semver: ${{ needs.code-build.outputs.semver }}
-          golang_version: ${{ needs.code-build.outputs.golang_version }}
+          rust_version: ${{ needs.code-build.outputs.rust_version }}
           homebrew_tap_token: ${{ secrets.HOMEBREW_TAP_TOKEN != '' && secrets.HOMEBREW_TAP_TOKEN || secrets.BOT_TOKEN }}
           apple_certificate_b64: ${{ secrets.APPLE_SIGN_CERTIFICATE_BASE64 != '' && secrets.APPLE_SIGN_CERTIFICATE_BASE64 || secrets.XCODE_BUILD_CERTIFICATE_BASE64 }}
           apple_certificate_pass: ${{ secrets.APPLE_SIGN_CERTIFICATE_PASS != '' && secrets.APPLE_SIGN_CERTIFICATE_PASS || secrets.XCODE_BUILD_CERTIFICATE_PASS }}
@@ -266,7 +267,7 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg_passphrase: ${{ secrets.GPG_PASSPHRASE }}
           semver: ${{ needs.code-build.outputs.semver }}
-          golang_version: ${{ needs.code-build.outputs.golang_version }}
+          rust_version: ${{ needs.code-build.outputs.rust_version }}
           chocolatey_api_key: ${{ secrets.CHOCOLATEY_API_KEY }}
 
   goreleaser_main:
@@ -310,7 +311,7 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg_passphrase: ${{ secrets.GPG_PASSPHRASE }}
           semver: ${{ needs.code-build.outputs.semver }}
-          golang_version: ${{ needs.code-build.outputs.golang_version }}
+          rust_version: ${{ needs.code-build.outputs.rust_version }}
           homebrew_tap_token: ${{ secrets.HOMEBREW_TAP_TOKEN != '' && secrets.HOMEBREW_TAP_TOKEN || secrets.BOT_TOKEN }}
           chocolatey_api_key: ${{ secrets.CHOCOLATEY_API_KEY }}
           apple_certificate_b64: ${{ secrets.APPLE_SIGN_CERTIFICATE_BASE64 != '' && secrets.APPLE_SIGN_CERTIFICATE_BASE64 || secrets.XCODE_BUILD_CERTIFICATE_BASE64 }}
