@@ -59,7 +59,7 @@ Use this template when you want a new Rust service that already follows the Clou
 - `.cloudopsworks/gitversion_gitflow.yaml` — reference GitVersion config aligned with the template's default GitFlow release model
 - `.cloudopsworks/gitversion_githubflow.yaml` — optional GitVersion reference for teams that explicitly rewire workflows away from GitFlow
 - `.github/workflows/` — reusable CI/CD orchestration
-- `.goreleaser.yml` — GoReleaser configuration for cross-platform binary releases (used when `goreleaser: true` is set in `inputs-global.yaml`)
+- `.goreleaser.yml` — GoReleaser configuration for cross-platform binary releases (used when `rust.goreleaser.enabled: true` is set in `inputs-global.yaml`; add `macos.goreleaser.yml` / `windows.goreleaser.yml` yourself when you enable the macOS or Chocolatey runners)
 - `Makefile` — deprecated compatibility wrappers for bootstrap and version operations
 
 ---
@@ -161,13 +161,36 @@ Set these values before your first pipeline run:
 Use `cloud: none` and `cloud_type: none` only for repositories that should build and scan without deployment.
 
 Common optional sections:
-- `rust` — Rust toolchain version, optional components, target dist/arch, build image variant, and optional `goreleaser: true` flag to activate GoReleaser releases (requires `GPG_PRIVATE_KEY` and `GPG_PASSPHRASE` secrets; optional secrets enable Homebrew, Chocolatey, and Apple signing — see **GoReleaser secrets** below)
+- `rust` — Rust toolchain version, optional components, target dist/arch, build image variant, and optional GoReleaser publishing (including macOS and Chocolatey/Windows runners; requires `GPG_PRIVATE_KEY` and `GPG_PASSPHRASE` secrets; optional secrets enable Homebrew, Chocolatey, and Apple signing — see **GoReleaser secrets** below)
+- `pages` — GitHub Pages publishing for Jekyll documentation (see [GitHub Pages documentation](#github-pages-documentation))
 - `preview` — PR preview environment behavior
 - `apis` — API Gateway publishing
 - `observability` — tracing and monitoring agent configuration
 - `snyk`, `semgrep`, `trivy`, `sonarqube`, `dependencyTrack` — security and quality tooling
 - `docker_inline`, `docker_args`, `custom_run_command`, `custom_usergroup` — container customization
 - `is_ooss` — mark the generated repository as open source when needed
+
+To enable GoReleaser for tagged releases, configure the `goreleaser` block under `rust`:
+
+```yaml
+rust:
+  goreleaser:
+    enabled: true     # run GoReleaser on the default runner with .goreleaser.yml
+    macos: true       # optional: run GoReleaser on a macOS runner with macos.goreleaser.yml
+    chocolatey: true  # optional: run GoReleaser on a Windows runner with windows.goreleaser.yml
+```
+
+| Key | Runner | Config file (repository root) | Typical use |
+|---|---|---|---|
+| `enabled` | `runner_set` (default runner) | `.goreleaser.yml` | Cross-platform binaries, archives, checksums, Homebrew tap |
+| `macos` | `macos-latest` | `macos.goreleaser.yml` | macOS code signing and notarization |
+| `chocolatey` | `windows-latest` | `windows.goreleaser.yml` | Chocolatey package build and push |
+
+Each key opts in independently and defaults to disabled. Enabling any of them makes the release job create the GitHub release as a draft for GoReleaser to complete. The macOS and Chocolatey jobs run first, and the main GoReleaser job runs after them. A failure in the macOS or Chocolatey job does not block the main job. All GoReleaser jobs run only after a successful release job, and only for release builds without a prerelease qualifier.
+
+The boolean form `rust.goreleaser: true` is deprecated but still supported; it is equivalent to `goreleaser.enabled: true`.
+
+Leave GoReleaser unset when the repository should only build container/image artifacts. The release workflow keeps GoReleaser disabled by default.
 
 ---
 
@@ -250,6 +273,26 @@ Use preview environments when pull requests from `feature/**` or `hotfix/**` sho
 
 ---
 
+## GitHub Pages documentation
+
+The `docs-pages.yml` workflow builds a Jekyll site from your repository docs and deploys it to GitHub Pages. It is disabled by default. Enable it in `inputs-global.yaml`:
+
+```yaml
+pages:
+  enabled: true
+  docs_path: "docs"         # Jekyll source folder (default: docs)
+  pages_path: "docs-pages"  # build output folder uploaded to Pages (default: docs-pages)
+```
+
+Requirements:
+- Jekyll-format docs under `docs_path`, including a `_config.yml`
+- `Gemfile` and `Gemfile.lock` at the repository root that pin Jekyll and its plugins
+- Repository **Settings → Pages → Build and deployment → Source** set to **GitHub Actions**
+
+The workflow runs on pushes to `master` that change `docs/**`, `Gemfile`, or `Gemfile.lock`, and on manual dispatch. If you set a custom `docs_path`, pushes under that folder do not trigger it automatically, so run it manually (`docs-pages.yml` is template-owned and is overwritten on upgrade). When `pages.enabled` is not `true`, the build step and deploy job are skipped.
+
+---
+
 ## GitHub Actions workflow model
 
 Important workflows in this template:
@@ -261,7 +304,10 @@ Important workflows in this template:
 - `deploy-blue-green.yml` — blue/green deployment flow
 - `scan.yml` — SAST/SCA/DAST orchestration
 - `environment-unlock.yml` / `environment-destroy.yml` — environment operations
+- `docs-pages.yml` — Jekyll build and GitHub Pages deployment when `pages.enabled: true`
 - `automerge.yml`, slash-command workflows, Jira integration workflows — repo automation
+
+When GoReleaser is enabled under `rust.goreleaser`, `main-build.yml` runs GoReleaser publication jobs after the standard GitHub release is created: `goreleaser_mac` (macOS runner) and `goreleaser_chocolatey` (Windows runner) when their flags are set, then `goreleaser_main`. Use that mode only when the generated repository includes valid GoReleaser configuration files and the signing secrets described below.
 
 This template also includes dedicated GitVersion reference files for both GitFlow and GitHub Flow release models. The default repository behavior remains GitFlow. Treat the GitHub Flow file as reference-only unless you also update workflow triggers, deployment mapping, and branch policy to match it. If your generated repository wants to use one of these files directly, wire it explicitly in your generator or build logic rather than assuming automatic selection.
 
@@ -284,7 +330,7 @@ Review the `with:` and `secrets:` blocks in the workflow files and align your re
 
 ### GoReleaser secrets (required when goreleaser is enabled)
 
-When you set `goreleaser: true` under the `rust:` section of `.cloudopsworks/vars/inputs-global.yaml`, the `main-build.yml` pipeline activates a GoReleaser release step. This step signs artifacts using GPG and requires the following secrets to be present at the **repository or organization level** before the first pipeline run:
+When you enable any GoReleaser job (`enabled`, `macos`, or `chocolatey`) under `rust.goreleaser` in `.cloudopsworks/vars/inputs-global.yaml`, the `main-build.yml` pipeline activates the matching GoReleaser release jobs. These jobs sign artifacts using GPG and require the following secrets to be present at the **repository or organization level** before the first pipeline run:
 
 **Required secrets:**
 
@@ -298,10 +344,10 @@ When you set `goreleaser: true` under the `rust:` section of `.cloudopsworks/var
 | Secret | Exposed as | Description |
 |--------|------------|-------------|
 | `HOMEBREW_TAP_TOKEN` | `HOMEBREW_TAP_TOKEN` | GitHub token with write access to the Homebrew tap repository. Falls back to `BOT_TOKEN` when not set. |
-| `CHOCOLATEY_API_KEY` | `CHOCOLATEY_API_KEY` | API key for publishing packages to the Chocolatey community repository. |
+| `CHOCOLATEY_API_KEY` | `CHOCOLATEY_API_KEY` | API key for publishing packages to the Chocolatey community repository (used by the `chocolatey` job). |
 | `APPLE_SIGN_CERTIFICATE_BASE64` (or `XCODE_BUILD_CERTIFICATE_BASE64`) | `MACOS_SIGN_P12` | Base64-encoded P12 certificate used to sign macOS binaries. Preferred name is `APPLE_SIGN_CERTIFICATE_BASE64`; the legacy `XCODE_BUILD_CERTIFICATE_BASE64` is accepted as a fallback. |
 | `APPLE_SIGN_CERTIFICATE_PASS` (or `XCODE_BUILD_CERTIFICATE_PASS`) | `MACOS_SIGN_PASSWORD` | Passphrase that unlocks the P12 certificate above. Preferred name is `APPLE_SIGN_CERTIFICATE_PASS`; the legacy `XCODE_BUILD_CERTIFICATE_PASS` is accepted as a fallback. |
-| `APPLE_KEYCHAIN_PASSWORD` (or `XCODE_KEYCHAIN_PASSWORD`) | `MACOS_KEYCHAIN_PASSWORD` | Password used to create the temporary macOS keychain that holds the signing certificate. Preferred name is `APPLE_KEYCHAIN_PASSWORD`; the legacy `XCODE_KEYCHAIN_PASSWORD` is accepted as a fallback. |
+| `APPLE_KEYCHAIN_PASSWORD` (or `XCODE_KEYCHAIN_PASSWORD`) | `KEYCHAIN_PASSWORD` | Password used to create the temporary macOS keychain that holds the signing certificate on the macOS runner. Preferred name is `APPLE_KEYCHAIN_PASSWORD`; the legacy `XCODE_KEYCHAIN_PASSWORD` is accepted as a fallback. |
 | `APPLE_STORE_CONNECT_KEY_BASE64` | `MACOS_NOTARY_KEY` | Base64-encoded App Store Connect API private key used for macOS notarization. |
 | `APPLE_STORE_CONNECT_KEY_ID` | `MACOS_NOTARY_KEY_ID` | Key ID corresponding to the App Store Connect API key. |
 | `APPLE_STORE_CONNECT_ISSUER_ID` | `MACOS_NOTARY_ISSUER_ID` | Issuer ID for the App Store Connect API key. |
@@ -310,14 +356,14 @@ When you set `goreleaser: true` under the `rust:` section of `.cloudopsworks/var
 
 ### GoReleaser configuration requirements
 
-The `.goreleaser.yml` file included in this template is pre-configured for the CloudOps Works release workflow. The most important setting is:
+The `.goreleaser.yml` file included in this template is pre-configured for the CloudOps Works release workflow. The template does not ship `macos.goreleaser.yml` or `windows.goreleaser.yml`; add them at the repository root when you enable the `macos` or `chocolatey` jobs. The most important setting is:
 
 ```yaml
 release:
   use_existing_draft: true
 ```
 
-**This setting is required.** The CloudOps Works pipeline pre-creates a draft GitHub Release before invoking GoReleaser. Without `use_existing_draft: true`, GoReleaser will attempt to create a second release for the same tag and fail. Do not remove or set this value to `false`.
+**This setting is required in every GoReleaser config file you enable** (`.goreleaser.yml`, `macos.goreleaser.yml`, `windows.goreleaser.yml`). The CloudOps Works pipeline pre-creates a draft GitHub Release before invoking GoReleaser. Without `use_existing_draft: true`, GoReleaser will attempt to create a second release for the same tag and fail. Do not remove or set this value to `false`.
 
 ---
 
@@ -351,7 +397,8 @@ If you use the CloudOps Works release workflow, keep changes grouped by release 
 - [ ] Update `.cloudopsworks/vars/inputs-global.yaml`
 - [ ] Configure exactly one target file per active environment
 - [ ] Configure preview settings if needed
-- [ ] Add required GitHub secrets and variables (include `GPG_PRIVATE_KEY` and `GPG_PASSPHRASE` if goreleaser is enabled; add optional Homebrew, Chocolatey, or Apple signing secrets as needed)
+- [ ] Configure GitHub Pages docs (`pages`) and GoReleaser runners (`rust.goreleaser`) if needed
+- [ ] Add required GitHub secrets and variables (include `GPG_PRIVATE_KEY` and `GPG_PASSPHRASE` if any GoReleaser job is enabled; add optional Homebrew, Chocolatey, or Apple signing secrets as needed)
 - [ ] Run `cargo test`
 - [ ] Open a PR and verify `pr-build.yml`
 - [ ] Merge and verify the first environment deployment
